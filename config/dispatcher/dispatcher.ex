@@ -55,7 +55,6 @@ defmodule Dispatcher do
     Proxy.forward conn, [], "http://vc-issuer/issuer/vct"
   end
 
-
   # layer order matters! we need to intercept the .well-known variants first, hence :static
   match "/vc-issuer/*path", %{ accept: [:any], layer: :api_services } do
     Proxy.forward conn, path, "http://vc-issuer/issuer/"
@@ -88,7 +87,6 @@ defmodule Dispatcher do
   #################
   # Jobs & tasks
   #################
-
   match "/jobs/*path", %{accept: [:json], layer: :api_services} do
     Proxy.forward conn, path, "http://cache/jobs/"
   end
@@ -120,7 +118,6 @@ defmodule Dispatcher do
   #################
   # Frontend Harvesting
   #################
-
   match "/data-containers/*path", %{accept: [:json], layer: :api_services} do
     Proxy.forward conn, path, "http://cache/data-containers/"
   end
@@ -164,7 +161,6 @@ defmodule Dispatcher do
   #################
   # OPARL PROXY
   #################
-
   match "/oparl/*path", %{ accept: [:any], layer: :api_services } do
     Proxy.forward conn, path, "http://oparl-to-eli/oparl/"
   end
@@ -176,7 +172,6 @@ defmodule Dispatcher do
   #################
   # RESOURCES
   #################
-
   match "/datasets/*path", %{ accept: [:json], layer: :resources } do
     Proxy.forward conn, path, "http://cache/datasets/"
   end
@@ -304,7 +299,6 @@ defmodule Dispatcher do
   #################################################################
   # FILES
   #################################################################
-
   get "/files/:id/download", %{accept: [:any]} do
     Proxy.forward(conn, [], "http://file/files/" <> id <> "/download")
   end
@@ -356,7 +350,6 @@ defmodule Dispatcher do
   ###############
   # STATIC
   ###############
-
   # self-service
   match "/index.html", %{reverse_host: ["dashboard" | _rest], layer: :static} do
     forward(conn, [], "http://frontend-harvesting/index.html")
@@ -439,7 +432,6 @@ defmodule Dispatcher do
   #################
   # FRONTEND PAGES
   #################
-
   # we don't forward the path, because the app should take care of this in the browser.
 
   # self-service
@@ -492,7 +484,6 @@ defmodule Dispatcher do
   #################
   # NOT FOUND
   #################
-
   match "/*_path", %{ layer: :not_found } do
     send_resp(conn, 404, "Route not found.  See config/dispatcher.ex")
   end

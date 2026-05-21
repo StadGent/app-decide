@@ -159,7 +159,7 @@ services:
   oslo-eli-transformer:
     image: lblod/decide-harvester-transformation-service:1.0.0
     environment:
-      INPUT_GRAPH: http://mu.semte.ch/graphs/oslo-decisions/landing
+      INPUT_GRAPH: http://mu.semte.ch/graphs/public
       OUTPUT_GRAPH: http://mu.semte.ch/graphs/public/gent
       ORGANIZATIONS_GRAPH: http://mu.semte.ch/graphs/bestuurseenheden-bestuursorganen
       BYPASS_MU_SPARQL_ENDPOINT: true
