@@ -17,8 +17,6 @@ services:
     networks:
       - default
       - debug
-  dcat:
-    restart: "no"
   virtuoso:
     restart: "no"
     networks:
@@ -30,28 +28,14 @@ services:
     restart: "no"
   file:
     restart: "no"
-  vc-issuer:
-    restart: "no"
-  mocklogin:
-    image: lblod/mock-login-service:0.7.0
   migrations:
     restart: "no"
   deltanotifier:
     restart: "no"
   frontend-yasgui:
     restart: "no"
-  frontend-dcat:
-    restart: "no"
-  frontend-human-validator:
-    restart: "no"
   frontend-harvesting:
     restart: "no"
-  oparl-to-eli:
-    restart: "no"
-  lokaal-beslist-consumer:
-    restart: no
-  decisions-ghent-filter:
-    restart: no
   oslo-eli-transformer:
     restart: no
   job-controller:
@@ -67,8 +51,6 @@ services:
   pdf-content:
     restart: "no"
   apache-tika:
-    restart: "no"
-  question-answering:
     restart: "no"
   search:
     restart: no
@@ -90,17 +72,11 @@ services:
     restart: no
     profiles:
       - search
-  annotation-review:
-    restart: no
   pdf-scraper:
     restart: "no"
   nominatim:
     restart: "no"
   named-entity-recognition:
-    restart: "no"
-  codelist-labeling:
-    restart: "no"
-  frontend-smart-search:
     restart: "no"
   kibana:
     restart: no
@@ -114,7 +90,3 @@ services:
     user: root
     command: |
       sh -c "/usr/local/bin/kibana-docker --allow-root;"
-  policy-impact-report:
-    restart: no
-  frontend-policy-impact-report:
-    restart: no
