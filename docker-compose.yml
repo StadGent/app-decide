@@ -157,7 +157,7 @@ services:
     labels:
       - 'logging=true'
   oslo-eli-transformer:
-    image: lblod/decide-harvester-transformation-service:1.0.0
+    image: lblod/decide-harvester-transformation-service:feature-toggle
     environment:
       INPUT_GRAPH: http://mu.semte.ch/graphs/public
       OUTPUT_GRAPH: http://mu.semte.ch/graphs/public/gent
@@ -166,6 +166,7 @@ services:
       BATCH_SIZE: 1000
       SLEEP_BETWEEN_BATCHES: 5
       OPERATION_URI: http://lblod.data.gift/id/jobs/concept/TaskOperation/oslo-eli/transform
+      DROP_INPUT_GRAPH: false
     labels:
       - logging=true
     restart: always
