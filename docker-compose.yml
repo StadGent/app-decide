@@ -152,6 +152,8 @@ services:
     logging: *default-logging
   annotation-job-splitter:
     image: lblod/annotation-job-splitter-service:0.0.4
+    volumes:
+      - ./config/annotation-job-splitter:/config
     restart: always
     logging: *default-logging
     labels:
