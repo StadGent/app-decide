@@ -25,9 +25,9 @@
       "callback_url": null
     },
     "langchain": {
-      "provider": "ollama",
-      "model_name": "mistral-nemo",
-      "base_url": "http://ollama:11434",
+      "provider": "mistralai",
+      "model_name": "mistral-small-latest",
+      "base_url": "https://api.mistral.ai/v1",
       "temperature": 0.1,
       "max_text_length": 6000
     }
@@ -35,8 +35,7 @@
   "segmentation": {
     "llm": {
       "provider": "mistralai",
-      "model_name": "mistral-large-latest",
-      "api_key": "SECRET_KEY",
+      "model_name": "mistral-medium-3.5",
       "base_url": "https://api.mistral.ai/v1",
       "temperature": 0.1
     },
