@@ -1,24 +1,5 @@
-export default [
-    {
-        match: {
-          predicate: {
-            type: "uri",
-            value: "http://www.w3.org/ns/adms#status",
-          },
-          object: {
-            type: "uri",
-            value: "http://redpencil.data.gift/id/concept/JobStatus/scheduled",
-          },
-        },
-        callback: {
-          method: "POST",
-          url: "http://codelist-labeling/delta",
-        },
-        options: {
-          resourceFormat: "v0.0.1",
-          gracePeriod: 1000,
-          ignoreFromSelf: true,
-          sendMatchesOnly: true,
-        },
-      }
-  ];
+// The `codelist-labeling` service is not part of this fork, so its delta rule
+// was removed — the unresolved target caused delta-notifier changeset errors.
+// If codelist matching is re-enabled, add the codelist-labeling-service to the
+// compose file (see upstream compose/ai.yml) and restore the rule below.
+export default [];
