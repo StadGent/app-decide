@@ -44,6 +44,8 @@ services:
       - 'logging=true'
     restart: always
     logging: *default-logging
+    ports:
+      - 8890:8890
   resource:
     image: semtech/mu-cl-resources:1.27.2
     environment:
@@ -111,9 +113,10 @@ services:
       EMBER_AUTHENTICATION_ENABLED: 'true'
       EMBER_LOGIN_ROUTE: 'login'
       EMBER_OPARL_HARVESTING_ENABLED: false
-      EMBER_PDF_HARVESTING_ENABLED: true
+      EMBER_PDF_HARVESTING_ENABLED: false
       EMBER_NER_AND_NEL_ANNOTATIONS_ENABLED: true
       EMBER_CODELIST_MAPPING_ENABLED: true
+      EMBER_OSLO_HARVESTING_ENABLED: true
     labels:
       - 'logging=true'
     restart: always
@@ -135,6 +138,8 @@ services:
       - ./config/job-controller:/config
     environment:
       MU_APPLICATION_GRAPH: 'http://mu.semte.ch/graphs/harvesting'
+      LOG_SPARQL_ALL: 'false'
+      DEBUG_AUTH_HEADERS: 'false'
     labels:
       - 'logging=true'
     restart: always
@@ -320,7 +325,7 @@ services:
     restart: always
     logging: *default-logging
   harvest_scraper:
-    image: lblod/scraper:1.5.0
+    image: lblod/scraper:resume
     volumes:
       - ./data/files:/share
     environment:
