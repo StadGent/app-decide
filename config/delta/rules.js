@@ -6,6 +6,8 @@ import search from './search';
 import resource from './resource';
 import codelist from './codelist';
 import annotationJobSplitter from './annotation-job-splitter';
+import ldes from './ldes';
+import jsonToEli from './json-to-eli';
 
 export default [
   ...resource,
@@ -13,7 +15,9 @@ export default [
   ...jobController,
   ...pdfToEli,
   ...osloToEli,
+  ...jsonToEli,
   ...search,
   ...codelist,
   ...annotationJobSplitter,
+  ...ldes,
 ];

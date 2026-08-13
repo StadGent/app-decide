@@ -34,6 +34,10 @@
                 "operation": {
                     "type": "url",
                     "predicate": "task:operation"
+                },
+                "split-decisions": {
+                    "type": "boolean",
+                    "predicate": "ext:splitDecisions"
                 }
             },
             "relationships": {
@@ -137,6 +141,10 @@
                 "modified": {
                     "type": "datetime",
                     "predicate": "dct:modified"
+                },
+                "checked-for-scheduling": {
+                    "type": "datetime",
+                    "predicate": "ext:checkedForScheduling"
                 },
                 "status": {
                     "type": "url",

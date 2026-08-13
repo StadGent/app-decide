@@ -43,5 +43,27 @@ export default {
           },
         ],
       },
+    'http://lblod.data.gift/id/jobs/concept/JobOperation/harvesting/json-to-enriched':
+      {
+        taskConfiguration: [
+          {
+            currentOperation:
+              'http://lblod.data.gift/id/jobs/concept/TaskOperation/split-task-json-to-eli',
+            nextOperation:
+              'http://lblod.data.gift/id/jobs/concept/TaskOperation/translating',
+          },
+        ],
+      },
+    'http://lblod.data.gift/id/jobs/concept/JobOperation/harvesting/pdf-to-enriched':
+      {
+        taskConfiguration: [
+          {
+            currentOperation:
+              'http://lblod.data.gift/id/jobs/concept/TaskOperation/split-task-pdf-to-enriched-translating',
+            nextOperation:
+              'http://lblod.data.gift/id/jobs/concept/TaskOperation/translating',
+          },
+        ],
+      },
   },
 };

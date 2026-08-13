@@ -26,11 +26,26 @@ export const BATCH_SIZE = env
   .default('100')
   .asIntPositive();
 
+export const RUN_SPARQL_VALIDATIONS = env
+  .get('RUN_SPARQL_VALIDATIONS')
+  .default('false')
+  .asBool();
+
+export const SAMPLING_ENABLED = env
+  .get('SAMPLING_ENABLED')
+  .default('true')
+  .asBool();
+
+export const SAMPLING_SIZE = env
+  .get('SAMPLING_SIZE')
+  .default('100')
+  .asIntPositive();
+  
 import { sparqlEscapeUri, uuid } from "mu";
 import { querySudo } from '@lblod/mu-auth-sudo';
 
 import { Store, DataFactory } from "n3";
-const { namedNode, literal } = DataFactory;
+const { quad, namedNode, literal } = DataFactory;
 
 const CRON_PATTERN = "0 3 * * *";
 const REPORT_NAME = "ELI validation of Decide";
@@ -47,6 +62,7 @@ const safeNamedGraphs = namedGraphs
   .join('\n');
 
 const cronFunction = async (namedGraph = null) => {
+    await waitForDatabase();
     console.log("report starts");
     try {
         // Read all SHACL files in the shacl folder
@@ -63,13 +79,16 @@ const cronFunction = async (namedGraph = null) => {
         // Key is to pass a reportURI to the validation function, so all results are linked to the same report
         const reportUUID = uuid();
         const reportURI = `http://data.lblod.info/id/reports/${reportUUID}`;
+        const created = new Date().toISOString();
         for (const targetClass of allTargetClasses) {
-            const count = await countResources(targetClass, namedGraphs);
-            console.log(`Adding ${count} resources for graphs ${safeNamedGraphs} and resource type ${targetClass}...`);
+            const totalCount = await countResources(targetClass, namedGraphs);
+            const count = SAMPLING_ENABLED ? Math.min(totalCount, SAMPLING_SIZE) : totalCount;
+            console.log(`Adding ${count} resources for graphs ${safeNamedGraphs} and resource type ${targetClass}${SAMPLING_ENABLED ? ` (sampling enabled, total: ${totalCount})` : ''}...`);
             for (let offset = 0; offset < count; offset += BATCH_SIZE) {
                 const dataDataset = new Store();
-                await fillDataDataset(targetClass, offset, dataDataset, shapesDataset, sparqlShapeDataset);
-                const batchReportDataset = await validateShapesAndSparql(dataDataset, shapesDataset, sparqlValidationObjects, reportURI);
+                await fillDataDataset(targetClass, offset, count, dataDataset);
+                const batchReportDataset = await validateShapesAndSparql(dataDataset, shapesDataset, sparqlValidationObjects, reportURI, reportUUID);
+                addTimestamps(batchReportDataset, reportURI, created);
                 await saveDatasetToNamedGraphs(batchReportDataset, namedGraphs);
             }
             console.log(`SHACL validation done for target class ${targetClass}.`);
@@ -94,7 +113,7 @@ export default {
 };
 
 // Fill dataDataset, one level deep (?resource ?p ?o), with resources of type target class
-async function fillDataDataset(targetClass, offset, dataDataset) {
+async function fillDataDataset(targetClass, offset, count, dataDataset) {
     const resources = [];
     const resourcesResult = await querySudo(`
     SELECT DISTINCT ?resource
@@ -107,7 +126,7 @@ async function fillDataDataset(targetClass, offset, dataDataset) {
                 ?resource a ${sparqlEscapeUri(targetClass)} .
             }
         }
-    LIMIT ${BATCH_SIZE}
+    LIMIT ${Math.min(BATCH_SIZE, count - offset)}
     OFFSET ${offset}
     `);
     resourcesResult.results.bindings.forEach((binding) => {
@@ -146,19 +165,21 @@ async function fillDataDataset(targetClass, offset, dataDataset) {
     })
 }
 
-async function validateShapesAndSparql(dataDataset, shapesDataset, sparqlValidationObjects, reportURI) {
+async function validateShapesAndSparql(dataDataset, shapesDataset, sparqlValidationObjects, reportURI, reportUUID) {
     console.log(
             `Running SHACL validation on store of size ${dataDataset.size}...`
     );
     const startTime = Date.now();
     console.log(`Running non-SPARQL-based constraints...`);
-    const reportDataset = await validateDataset(dataDataset, shapesDataset, reportURI);
-    console.log(`Running SPARQL-based constraints...`);
-    await addSparqlValidationsToReport(
-        dataDataset,
-        reportDataset,
-        sparqlValidationObjects
-    );
+    const reportDataset = await validateDataset(dataDataset, shapesDataset, reportURI, reportUUID);
+    if (RUN_SPARQL_VALIDATIONS) {
+        console.log(`Running SPARQL-based constraints...`);
+        await addSparqlValidationsToReport(
+            dataDataset,
+            reportDataset,
+            sparqlValidationObjects
+        );
+    }
     const endTime = Date.now();
     console.log(
         `SHACL validation took ${(endTime - startTime) / 1000} seconds.`
@@ -177,4 +198,51 @@ function retrieveTargetClasses(datasets) {
         .map(q => allTargetClasses.add(q.object.value));
     });
     return allTargetClasses;
+}
+
+function addTimestamps(reportDataset, reportURI, createdTime) {
+    // Add creation time stamp
+    // This is used to delete previous reports when ONLY_KEEP_LATEST_REPORT is true
+    reportDataset.add(
+        quad(
+            namedNode(reportURI),
+            namedNode('http://purl.org/dc/terms/created'),
+            literal(
+                createdTime,
+                namedNode('http://www.w3.org/2001/XMLSchema#dateTime'),
+            ),
+        ),
+    );
+    // Add modified time stamp
+    reportDataset.add(
+        quad(
+            namedNode(reportURI),
+            namedNode('http://purl.org/dc/terms/modified'),
+            literal(
+                createdTime,
+                namedNode('http://www.w3.org/2001/XMLSchema#dateTime'),
+            ),
+        ),
+    );
+}
+
+async function waitForDatabase() {
+  const maxRetries = 30;
+  const delayMs = 2000;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await querySudo('ASK { ?s ?p ?o }');
+      console.log('Database connection established');
+      return;
+    } catch {
+      console.log(`Waiting for database... (attempt ${attempt}/${maxRetries})`);
+      if (attempt === maxRetries) {
+        throw new Error(
+          `Failed to connect to database after ${maxRetries} attempts`,
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
 }
