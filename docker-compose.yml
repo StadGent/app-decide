@@ -223,12 +223,19 @@ services:
       MISTRAL_MODEL: 'ministral-14b-2512'
       # 0.2.x moved the config mount from /app to /config
       CONFIG_PATH: '/config/config.json'
+      # decide_ai_service_base reads this compose file at startup to record the
+      # running image tag/config as agent provenance in the store. It looks up
+      # services[COMPOSE_SERVICE], so this must match the service name below and
+      # the mounted file must contain it.
+      COMPOSE_FILE: /tmp/docker-compose.yaml
+      COMPOSE_SERVICE: entity-linking
       MISTRAL_API_KEY: ${MISTRAL_API_KEY}
     links:
       - database:database
     volumes:
       - ./config/nel/config:/config
       - ./data/nel:/app/data
+      - ./docker-compose.yml:/tmp/docker-compose.yaml:ro
     restart: always
   pdf-scraper:
     image: semanticai/decide-pdf-scraper:0.0.6
@@ -312,9 +319,13 @@ services:
       ALLOW_MU_AUTH_SUDO: true
       # 0.2.x moved the config mount from /app to /config
       CONFIG_PATH: /config/config.json
+      # See entity-linking: read at startup to record agent provenance.
+      COMPOSE_FILE: /tmp/docker-compose.yaml
+      COMPOSE_SERVICE: named-entity-recognition
       MISTRAL_API_KEY: ${MISTRAL_API_KEY}
     volumes:
       - ./config/ner/config.json:/config/config.json:ro # Mount config as read-only
+      - ./docker-compose.yml:/tmp/docker-compose.yaml:ro
     depends_on:
       - virtuoso
     labels:
