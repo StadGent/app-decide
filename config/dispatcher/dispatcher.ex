@@ -387,22 +387,18 @@ defmodule Dispatcher do
   # STATIC
   ###############
   # self-service
-  match "/index.html", %{reverse_host: ["dashboard" | _rest], layer: :static} do
+  match "/index.html", %{reverse_host: ["probe" | _rest], layer: :static} do
     forward(conn, [], "http://frontend-harvesting/index.html")
   end
 
-  get "/assets/*path", %{reverse_host: ["dashboard" | _rest], layer: :static} do
+  get "/assets/*path", %{reverse_host: ["probe" | _rest], layer: :static} do
     forward(conn, path, "http://frontend-harvesting/assets/")
   end
 
-  get "/@appuniversum/*path", %{reverse_host: ["dashboard" | _rest], layer: :static} do
+  get "/@appuniversum/*path", %{reverse_host: ["probe" | _rest], layer: :static} do
     forward(conn, path, "http://frontend-harvesting/@appuniversum/")
   end
 
-  # dcat
-  match "/index.html",  %{reverse_host: ["ds" | _rest], layer: :static} do
-    forward(conn, [], "http://frontend-dcat/index.html")
-  end
 
   get "/assets/*path", %{reverse_host: ["ds" | _rest], layer: :static} do
     forward(conn, path, "http://frontend-dcat/assets/")
@@ -471,7 +467,7 @@ defmodule Dispatcher do
   # we don't forward the path, because the app should take care of this in the browser.
 
   # self-service
-  match "/*_path", %{reverse_host: ["dashboard" | _rest], accept: %{html: true}, layer: :frontend_fallback } do
+  match "/*_path", %{reverse_host: ["probe" | _rest], accept: %{html: true}, layer: :frontend_fallback } do
     forward(conn, [], "http://frontend-harvesting/index.html")
   end
 
