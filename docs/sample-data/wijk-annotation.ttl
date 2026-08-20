@@ -1,0 +1,41 @@
+# Manual wijk annotations for Gent decisions.
+#
+# Model: oa:Annotation, target = the decision (ELI work URI),
+#        body = the Stad Gent wijk (schema:AdministrativeArea).
+#
+# Load into: http://mu.semte.ch/graphs/public/pdf
+# Depends on: wijken.ttl (the stad.gent wijk resources) being loaded, if you
+#             want to resolve wijk labels; the annotations themselves stand alone.
+#
+# Hand-assigned from the geocoded location annotations, NOT pipeline output.
+# dct:creator "manual" keeps them distinguishable from the AI-derived
+# oa:linking location annotations in the same graph.
+
+@prefix oa:   <http://www.w3.org/ns/oa#> .
+@prefix dct:  <http://purl.org/dc/terms/> .
+@prefix mu:   <http://mu.semte.ch/vocabularies/core/> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix wijk: <https://stad.gent/id/administrative-area/> .
+
+# 2022_GR_00350 - huurovereenkomst Drongen, Halewijnstationstraat
+# basis: "Halewijnstationstraat 35, 9031 Drongen" (conf 0.9999)
+#        "Elshout 7, 9031 Drongen"                (conf 0.9999)
+<http://data.lblod.info/id/annotations/199283e1-cdf7-47f8-b388-5befbaf37198>
+    a              oa:Annotation ;
+    mu:uuid        "199283e1-cdf7-47f8-b388-5befbaf37198" ;
+    oa:motivatedBy oa:classifying ;
+    oa:hasTarget   <https://data.gent.be/id/besluiten/21.1206.0760.6494/work> ;
+    oa:hasBody     wijk:wijk-25 ;
+    dct:creator    "manual" ;
+    dct:created    "2026-08-20T15:12:37Z"^^xsd:dateTime .
+
+# 2022_GR_00476 - archeologische ensembles Caermersklooster
+# basis: "Vrouwebroersstraat 6, 9000 Gent" (conf 0.9832)
+<http://data.lblod.info/id/annotations/c06e3284-d10b-40f2-8cb2-9632064480cb>
+    a              oa:Annotation ;
+    mu:uuid        "c06e3284-d10b-40f2-8cb2-9632064480cb" ;
+    oa:motivatedBy oa:classifying ;
+    oa:hasTarget   <https://data.gent.be/id/besluiten/22.0214.3501.8930/work> ;
+    oa:hasBody     wijk:wijk-1 ;
+    dct:creator    "manual" ;
+    dct:created    "2026-08-20T15:12:37Z"^^xsd:dateTime .
