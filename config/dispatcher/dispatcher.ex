@@ -84,6 +84,10 @@ defmodule Dispatcher do
     Proxy.forward conn, [], "http://dsp-auth-wrapper/sparql"
   end
 
+  match "/sparql-auth", %{ layer: :static, accept: %{ any: true } } do
+    forward conn, [], "http://virtuoso:8890/sparql-auth"
+  end
+
   match "/annotation-review/*path", %{ accept: [:any], layer: :static } do
     Proxy.forward conn, path, "http://annotation-review/"
   end
