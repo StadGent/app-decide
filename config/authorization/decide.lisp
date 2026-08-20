@@ -155,6 +155,12 @@
   ("oa:SpecificResource" -> _)
   ("oa:TextPositionSelector" -> _))
 
+(define-graph public-annotations ("http://mu.semte.ch/graphs/public-annotations")
+  ("http://www.w3.org/ns/oa#Annotation" -> _))
+
+(grant (read)
+       :to public-annotations
+       :for "public")
 (supply-allowed-group "public")
 
 (grant (read)
