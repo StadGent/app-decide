@@ -212,7 +212,7 @@ services:
       TARGET_GRAPH: 'http://mu.semte.ch/graphs/public'
       DEFAULT_GRAPH: 'http://mu.semte.ch/graphs/harvesting'
       JOB_GRAPH: 'http://mu.semte.ch/graphs/harvesting'
-      AI_GRAPH: 'http://mu.semte.ch/graphs/public/pdf'
+      AI_GRAPH: 'http://mu.semte.ch/graphs/public/ai'
       ALLOW_MU_AUTH_SUDO: 'true'
       OLLAMA_HOST: 'http://ollama:11434'
       NOMINATIM_ENDPOINT: 'http://nominatim:8080/'
@@ -237,6 +237,26 @@ services:
       - ./data/nel:/app/data
       - ./docker-compose.yml:/tmp/docker-compose.yaml:ro
     restart: always
+  area-classification:
+    image: redpencil/decide-area-classification-service:0.1.0
+    environment:
+      OPERATION_URI: 'http://lblod.data.gift/id/jobs/concept/TaskOperation/area-classifying'
+      AI_GRAPH: 'http://mu.semte.ch/graphs/public/ai'
+      WIJK_GRAPH: 'http://mu.semte.ch/graphs/public'
+      # The geo query uses bif: functions, which sparql-parser will not pass
+      # through, so reads go straight to Virtuoso. Writes still go via mu-auth
+      # so deltas keep firing.
+      GEO_SPARQL_ENDPOINT: 'http://virtuoso:8890/sparql'
+      CONFIDENCE_THRESHOLD: '0.9'
+      ALLOW_MU_AUTH_SUDO: 'true'
+    volumes:
+      - ./config/area-classification:/config
+    links:
+      - database:database
+    labels:
+      - 'logging=true'
+    restart: always
+    logging: *default-logging
   pdf-scraper:
     image: semanticai/decide-pdf-scraper:0.0.6
     environment:
@@ -315,7 +335,7 @@ services:
       EXPRESSIONS_GRAPH: http://mu.semte.ch/graphs/public/pdf
       WORKS_GRAPH: http://mu.semte.ch/graphs/public/pdf
       MANIFESTATIONS_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      AI_GRAPH: http://mu.semte.ch/graphs/public/pdf
+      AI_GRAPH: http://mu.semte.ch/graphs/public/ai
       ALLOW_MU_AUTH_SUDO: true
       # 0.2.x moved the config mount from /app to /config
       CONFIG_PATH: /config/config.json

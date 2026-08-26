@@ -14,6 +14,7 @@
   :ext "http://mu.semte.ch/vocabularies/ext/"
   :foaf "http://xmlns.com/foaf/0.1/"
   :generiek "https://data.vlaanderen.be/ns/generiek#"
+  :geosparql "http://www.opengis.net/ont/geosparql#"
   :harvesting "http://lblod.data.gift/vocabularies/harvesting/"
   :locn "http://www.w3.org/ns/locn#"
   :mandaat "http://data.vlaanderen.be/ns/mandaat#"
@@ -24,6 +25,7 @@
   :org "http://www.w3.org/ns/org#"
   :perceel "https://data.vlaanderen.be/ns/perceel#"
   :person "http://www.w3.org/ns/person#"
+  :prov "http://www.w3.org/ns/prov#"
   :schema "http://schema.org/"
   :security "http://lblod.data.gift/vocabularies/security/"
   :skos "http://www.w3.org/2004/02/skos/core#"
@@ -125,6 +127,11 @@
   ("schema:TouristAttraction" -> _)
   ("perceel:Perceel" -> _)
   ("wikidata:Q2785216" -> _)
+  ;; Areas (Stad Gent wijken: schema:AdministrativeArea -> dct:spatial ->
+  ;; geosparql:Feature -> geosparql:hasGeometry -> geosparql:Geometry)
+  ("schema:AdministrativeArea" -> _)
+  ("geosparql:Feature" -> _)
+  ("geosparql:Geometry" -> _)
   ;; Annotations
   ("oa:Annotation" -> _)
   ("oa:SpecificResource" -> _)
@@ -151,6 +158,10 @@
   ("oa:Annotation" -> _)
   ("oa:SpecificResource" -> _)
   ("oa:TextPositionSelector" -> _))
+
+(define-graph public-areas ("http://mu.semte.ch/graphs/public/areas")
+  ("oa:Annotation" -> _)
+  ("prov:Activity" -> _))
 
 (define-graph public-annotations ("http://mu.semte.ch/graphs/public-annotations")
   ("http://www.w3.org/ns/oa#Annotation" -> _))
@@ -182,6 +193,10 @@
 
 (grant (read)
        :to-graph ai
+       :for-allowed-group "public")
+
+(grant (read)
+       :to-graph public-areas
        :for-allowed-group "public")
 
 (grant (read write)

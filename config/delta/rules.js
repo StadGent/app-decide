@@ -8,6 +8,7 @@ import codelist from './codelist';
 import annotationJobSplitter from './annotation-job-splitter';
 import ldes from './ldes';
 import jsonToEli from './json-to-eli';
+import areaClassification from './area-classification';
 
 export default [
   ...resource,
@@ -19,5 +20,6 @@ export default [
   ...search,
   ...codelist,
   ...annotationJobSplitter,
+  ...areaClassification,
   ...ldes,
 ];

@@ -149,6 +149,11 @@
         "currentOperation": "http://lblod.data.gift/id/jobs/concept/TaskOperation/entity-extracting",
         "nextOperation": "http://lblod.data.gift/id/jobs/concept/TaskOperation/named-entity-linking",
         "nextIndex": "5"
+      },
+      {
+        "currentOperation": "http://lblod.data.gift/id/jobs/concept/TaskOperation/named-entity-linking",
+        "nextOperation": "http://lblod.data.gift/id/jobs/concept/TaskOperation/area-classifying",
+        "nextIndex": "6"
       }
     ]
   },
