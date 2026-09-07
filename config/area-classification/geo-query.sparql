@@ -1,0 +1,90 @@
+# Point-in-polygon classification of decisions into Stad Gent wijken.
+#
+# This file is MOUNTED (see the docker-compose snippet in the README) and is
+# deliberately not baked into the service: everything below the prefixes is
+# Gent-specific. Another city will have a different CRS, a different literal
+# encoding and possibly a different axis order, and should ship its own copy of
+# this file rather than patch the service.
+#
+# The service substitutes four placeholders before executing (their exact
+# spelling is documented in the README -- do NOT repeat the placeholder tokens
+# in these comments, the substitution is textual and would corrupt them):
+# the input-resource VALUES block, the annotation graph, the wijk graph and the
+# confidence threshold.
+#
+# The query MUST return exactly two variables: ?work and ?wijk.
+#
+# NOTE: this query uses bif: functions and therefore runs against
+# GEO_SPARQL_ENDPOINT (Virtuoso) directly, because the sparql-parser in front of
+# mu-auth will not pass them. Keep it read-only; all writes go through mu-auth.
+
+PREFIX oa: <http://www.w3.org/ns/oa#>
+PREFIX nif: <http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX locn: <http://www.w3.org/ns/locn#>
+PREFIX geosparql: <http://www.opengis.net/ont/geosparql#>
+PREFIX schema: <http://schema.org/>
+PREFIX eli: <http://data.europa.eu/eli/ontology#>
+
+SELECT DISTINCT ?work ?wijk WHERE {
+  # --- Scope: only the resources this task was handed -------------------------
+  # Input containers hold eli:Expression URIs, but the NEL annotations hang off
+  # the eli:Work that the expression realizes, so we hop across is_realized_by.
+  # eli:is_realized_by is spread over several graphs (public/gent holds the bulk,
+  # public/pdf the rest), so this join is deliberately NOT graph-pinned.
+  VALUES ?resource {
+{{RESOURCE_VALUES}}
+  }
+  # NOT a UNION. Virtuoso does not propagate a VALUES binding from the enclosing
+  # group into UNION branches: with the VALUES outside, both branches see an
+  # unbound ?resource and the whole query returns 0 rows for every input.
+  # Verified on Virtuoso 07.20.3241 -- the same block written as OPTIONAL +
+  # COALESCE returns the expected rows, and repeating the VALUES inside each
+  # branch also works but duplicates a block that can hold 1000 URIs.
+  # COALESCE covers both container shapes: an expression hops to the work it
+  # realizes, a work falls through to itself.
+  OPTIONAL {
+    GRAPH ?resourceGraph { ?realizedWork eli:is_realized_by ?resource . }
+  }
+  BIND(COALESCE(?realizedWork, ?resource) AS ?work)
+
+  # --- The location annotations produced by the NER/NEL pipeline --------------
+  GRAPH <{{ANNOTATION_GRAPH}}> {
+    ?ann a oa:Annotation ;
+         oa:motivatedBy oa:linking ;
+         nif:confidence ?conf ;
+         oa:hasBody ?st .
+    ?st rdf:subject ?work ;
+        rdf:predicate ?pred ;
+        rdf:object ?loc .
+    # The pipeline emits BOTH prov:atLocation and dct:spatial for location
+    # statements. Pinning only prov:atLocation silently drops half the
+    # decisions -- confirmed empirically against the live store.
+    FILTER(?pred IN (prov:atLocation, dct:spatial))
+    FILTER(?conf > {{CONFIDENCE_THRESHOLD}})
+    ?loc locn:geometry/geosparql:asWKT ?pwkt .
+  }
+
+  # --- The wijk polygons -----------------------------------------------------
+  GRAPH <{{WIJK_GRAPH}}> {
+    ?wijk a schema:AdministrativeArea ;
+          dcterms:spatial/geosparql:hasGeometry/geosparql:asWKT ?gwkt .
+  }
+
+  # The wijk WKT literal is prefixed with the 46-character CRS marker
+  # "<https://www.opengis.net/def/crs/EPSG/0/31370> " (45 chars + one space),
+  # which bif:st_geomfromtext cannot parse -- hence the bif:subseq(..., 46).
+  # The polygons are Lambert 72 (EPSG:31370) and are reprojected to WGS84.
+  BIND(bif:st_transform(bif:st_geomfromtext(bif:subseq(str(?gwkt), 46), 31370), 4326) AS ?poly)
+
+  # Stored annotation points are POINT(lat lon), but bif:st_transform above
+  # yields (lon lat). bif:st_point(y, x) swaps the stored pair into (lon lat)
+  # so the point matches the reprojected polygon's axis order.
+  BIND(bif:st_geomfromtext(str(?pwkt)) AS ?raw)
+  BIND(bif:st_point(bif:st_y(?raw), bif:st_x(?raw)) AS ?pt)
+
+  FILTER(bif:st_intersects(?poly, ?pt))
+}
