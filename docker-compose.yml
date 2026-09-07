@@ -164,7 +164,7 @@ services:
     labels:
       - 'logging=true'
   oslo-eli-transformer:
-    image: lblod/decide-harvester-transformation-service:1.0.0
+    image: lblod/decide-harvester-transformation-service:1.1.0
     environment:
       INPUT_GRAPH: http://mu.semte.ch/graphs/public
       OUTPUT_GRAPH: http://mu.semte.ch/graphs/public/gent
