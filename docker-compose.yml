@@ -64,6 +64,17 @@ services:
       - 'logging=true'
     restart: always
     logging: *default-logging
+  sparql-cache:
+    image: redpencil/varnish-post:1.0.0
+    environment:
+      BACKEND_HOST: database
+      CACHE_TTL: 3600s
+    volumes:
+      - ./config/varnish/default.vcl:/templates/default.vcl:ro
+    labels:
+      - 'logging=true'
+    restart: always
+    logging: *default-logging
   file:
     image: semtech/mu-file-service:3.4.0
     volumes:
