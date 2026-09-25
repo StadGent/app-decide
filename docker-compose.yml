@@ -480,3 +480,13 @@ services:
       - "logging=true"
     restart: always
     logging: *default-logging
+
+  metrics:
+    image: lblod/metrics-service:0.1.0
+    volumes:
+      - ./data/metrics:/external-metrics
+      - ./config/metrics:/config
+    labels:
+      - 'logging=true'
+    restart: always
+    logging: *default-logging

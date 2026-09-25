@@ -530,6 +530,13 @@ defmodule Dispatcher do
   end
 
   #################
+  # prometheus reporting
+  #################
+  get "/metrics", %{ layer: :static, accept: %{ any: true } } do
+    Proxy.forward conn, [], "http://metrics/metrics"
+  end
+
+  #################
   # NOT FOUND
   #################
   match "/*_path", %{ layer: :not_found } do
