@@ -3,6 +3,44 @@ x-logging: &default-logging
   options:
     max-size: '10m'
     max-file: '3'
+x-virtuoso-healthcheck: &virtuoso-healthcheck
+  # Virtuoso is healthy when its SPARQL endpoint answers a query.
+  test:
+    - CMD-SHELL
+    - python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:8890/sparql?query=ASK%20%7B%3Fs%20%3Fp%20%3Fo%7D')"
+  interval: 10s
+  timeout: 5s
+  retries: 10
+  start_period: 5m
+x-database-healthcheck: &database-healthcheck
+  # The database (mu-authorization / sparql-parser) is healthy when it
+  # answers an (anonymous, public) ASK query.
+  test:
+    - CMD-SHELL
+    - wget -q -O /dev/null 'http://localhost:8890/sparql?query=ASK%20%7B%3Fs%20%3Fp%20%3Fo%7D'
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 30s
+x-depends-on-virtuoso: &depends-on-virtuoso
+  virtuoso:
+    condition: service_healthy
+x-depends-on-database: &depends-on-database
+  database:
+    condition: service_healthy
+x-deltanotifier-healthcheck: &deltanotifier-healthcheck
+  test:
+    - CMD-SHELL
+    - node -e "require('http').get('http://localhost:80/', () => process.exit(0)).on('error', () => process.exit(1))"
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 30s
+x-depends-on-database-and-delta: &depends-on-database-and-delta
+  database:
+    condition: service_healthy
+  deltanotifier:
+    condition: service_healthy
 services:
   identifier:
     image: semtech/mu-identifier:1.11.0
@@ -29,6 +67,8 @@ services:
     volumes:
       - ./config/authorization:/config
       - ./data/authorization:/data
+    depends_on: *depends-on-virtuoso
+    healthcheck: *database-healthcheck
     labels:
       - 'logging=true'
     restart: always
@@ -40,6 +80,7 @@ services:
     volumes:
       - ./config/virtuoso/virtuoso.ini:/data/virtuoso.ini
       - ./data/db:/data
+    healthcheck: *virtuoso-healthcheck
     labels:
       - 'logging=true'
     restart: always
@@ -52,6 +93,7 @@ services:
       CACHE_CLEAR_PATH: 'http://cache/.mu/clear-keys'
     volumes:
       - ./config/resources:/config
+    depends_on: *depends-on-database-and-delta
     labels:
       - 'logging=true'
     restart: always
@@ -71,6 +113,7 @@ services:
       CACHE_TTL: 3600s
     volumes:
       - ./config/varnish/default.vcl:/templates/default.vcl:ro
+    depends_on: *depends-on-database
     labels:
       - 'logging=true'
     restart: always
@@ -79,6 +122,7 @@ services:
     image: semtech/mu-file-service:3.4.0
     volumes:
       - ./data/files:/share
+    depends_on: *depends-on-database
     labels:
       - 'logging=true'
     restart: always
@@ -94,12 +138,14 @@ services:
     image: semtech/mu-migrations-service:0.9.0
     environment:
       MU_SPARQL_ENDPOINT: http://virtuoso:8890/sparql
+    depends_on: *depends-on-virtuoso
     volumes:
       - ./config/migrations:/data/migrations
   deltanotifier:
     image: nvdk/mu-delta-notifier:1.1.0
     volumes:
       - ./config/delta:/config
+    healthcheck: *deltanotifier-healthcheck
     labels:
       - 'logging=true'
     restart: always
@@ -139,6 +185,7 @@ services:
     environment:
       USERS_GRAPH: 'http://mu.semte.ch/graphs/users'
       SESSIONS_GRAPH: 'http://mu.semte.ch/graphs/sessions'
+    depends_on: *depends-on-database
     restart: always
     logging: *default-logging
     labels:
@@ -151,6 +198,7 @@ services:
       MU_APPLICATION_GRAPH: 'http://mu.semte.ch/graphs/harvesting'
       LOG_SPARQL_ALL: 'false'
       DEBUG_AUTH_HEADERS: 'false'
+    depends_on: *depends-on-database-and-delta
     labels:
       - 'logging=true'
     restart: always
@@ -162,6 +210,7 @@ services:
       DEBUG_AUTH_HEADERS: 'false'
       MAX_CONCURRENT_JOBS: 3
       MU_APPLICATION_GRAPH: 'http://mu.semte.ch/graphs/harvesting'
+    depends_on: *depends-on-database-and-delta
     labels:
       - 'logging=true'
     restart: always
@@ -170,6 +219,7 @@ services:
     image: lblod/annotation-job-splitter-service:0.0.6
     volumes:
       - ./config/annotation-job-splitter:/config
+    depends_on: *depends-on-database-and-delta
     restart: always
     logging: *default-logging
     labels:
@@ -185,6 +235,7 @@ services:
       SLEEP_BETWEEN_BATCHES: 5
       OPERATION_URI: http://lblod.data.gift/id/jobs/concept/TaskOperation/oslo-eli/transform
       DROP_INPUT_GRAPH: false
+    depends_on: *depends-on-database-and-delta
     labels:
       - logging=true
     restart: always
@@ -247,6 +298,7 @@ services:
       - ./config/nel/config:/config
       - ./data/nel:/app/data
       - ./docker-compose.yml:/tmp/docker-compose.yaml:ro
+    depends_on: *depends-on-database-and-delta
     restart: always
   area-classification:
     image: redpencil/decide-area-classification-service:0.1.0
@@ -264,6 +316,7 @@ services:
       - ./config/area-classification:/config
     links:
       - database:database
+    depends_on: *depends-on-database-and-delta
     labels:
       - 'logging=true'
     restart: always
@@ -357,14 +410,14 @@ services:
     volumes:
       - ./config/ner/config.json:/config/config.json:ro # Mount config as read-only
       - ./docker-compose.yml:/tmp/docker-compose.yaml:ro
-    depends_on:
-      - virtuoso
+    depends_on: *depends-on-virtuoso
     labels:
       - logging=true
     restart: always
     logging: *default-logging
   harvest_singleton-job:
     image: lblod/harvesting-singleton-job-service:1.0.0
+    depends_on: *depends-on-database-and-delta
     labels:
       - "logging=true"
     restart: always
@@ -377,6 +430,7 @@ services:
       DEFAULT_GRAPH: "http://mu.semte.ch/graphs/harvesting"
       INCREMENTAL_RETRIEVAL: "true"
       STORE_ALL_PAGES: "false"
+    depends_on: *depends-on-database-and-delta
     labels:
       - "logging=true"
     restart: always
@@ -402,6 +456,7 @@ services:
       WRITE_DEBUG_TTLS: "false"
     volumes:
       - ./data/files:/share
+    depends_on: *depends-on-database-and-delta
     labels:
       - "logging=true"
     restart: always
@@ -417,6 +472,7 @@ services:
       DEBUG_AUTH_HEADERS: "false"
     volumes:
       - ./data/files:/share
+    depends_on: *depends-on-database-and-delta
     restart: always
     logging: *default-logging
 
@@ -430,6 +486,7 @@ services:
     volumes:
       - ./data/files:/share
       - ./config/shacl:/config
+    depends_on: *depends-on-database-and-delta
     labels:
       - "logging=true"
     restart: always
@@ -444,6 +501,7 @@ services:
       LIMIT_SIZE: 2000
     volumes:
       - ./data/files:/share
+    depends_on: *depends-on-database-and-delta
     labels:
       - "logging=true"
     restart: always
@@ -462,6 +520,7 @@ services:
     volumes:
       - ./config/same-as-service:/config
       - ./data/files:/share
+    depends_on: *depends-on-database-and-delta
     labels:
       - "logging=true"
     restart: always
@@ -476,6 +535,7 @@ services:
       HIGH_LOAD_DATABASE_ENDPOINT: "http://virtuoso:8890/sparql"
     volumes:
       - ./data/files:/share
+    depends_on: *depends-on-database-and-delta
     labels:
       - "logging=true"
     restart: always
