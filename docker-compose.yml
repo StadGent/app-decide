@@ -274,7 +274,7 @@ services:
       TARGET_GRAPH: 'http://mu.semte.ch/graphs/public'
       DEFAULT_GRAPH: 'http://mu.semte.ch/graphs/harvesting'
       JOB_GRAPH: 'http://mu.semte.ch/graphs/harvesting'
-      AI_GRAPH: 'http://mu.semte.ch/graphs/public/ai'
+      AI_GRAPH: 'http://mu.semte.ch/graphs/public/gent'
       ALLOW_MU_AUTH_SUDO: 'true'
       OLLAMA_HOST: 'http://ollama:11434'
       NOMINATIM_ENDPOINT: 'http://nominatim:8080/'
@@ -304,7 +304,7 @@ services:
     image: redpencil/decide-area-classification-service:0.1.0
     environment:
       OPERATION_URI: 'http://lblod.data.gift/id/jobs/concept/TaskOperation/area-classifying'
-      AI_GRAPH: 'http://mu.semte.ch/graphs/public/ai'
+      AI_GRAPH: 'http://mu.semte.ch/graphs/public/gent'
       WIJK_GRAPH: 'http://mu.semte.ch/graphs/public'
       # The geo query uses bif: functions, which sparql-parser will not pass
       # through, so reads go straight to Virtuoso. Writes still go via mu-auth
@@ -333,11 +333,11 @@ services:
       OPARL_TEMP_GRAPH: http://mu.semte.ch/graphs/harvesting
       OSLO_TEMP_GRAPH: http://mu.semte.ch/graphs/harvesting
 
-      PUBLICATION_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      EXPRESSIONS_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      WORKS_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      MANIFESTATIONS_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      AI_GRAPH: http://mu.semte.ch/graphs/public/pdf
+      PUBLICATION_GRAPH: http://mu.semte.ch/graphs/public/gent
+      EXPRESSIONS_GRAPH: http://mu.semte.ch/graphs/public/gent
+      WORKS_GRAPH: http://mu.semte.ch/graphs/public/gent
+      MANIFESTATIONS_GRAPH: http://mu.semte.ch/graphs/public/gent
+      AI_GRAPH: http://mu.semte.ch/graphs/public/gent
       ALLOW_MU_AUTH_SUDO: true
     labels:
       - logging=true
@@ -357,11 +357,11 @@ services:
       OPARL_TEMP_GRAPH: http://mu.semte.ch/graphs/harvesting
       OSLO_TEMP_GRAPH: http://mu.semte.ch/graphs/harvesting
 
-      PUBLICATION_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      EXPRESSIONS_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      WORKS_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      MANIFESTATIONS_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      AI_GRAPH: http://mu.semte.ch/graphs/public/pdf
+      PUBLICATION_GRAPH: http://mu.semte.ch/graphs/public/gent
+      EXPRESSIONS_GRAPH: http://mu.semte.ch/graphs/public/gent
+      WORKS_GRAPH: http://mu.semte.ch/graphs/public/gent
+      MANIFESTATIONS_GRAPH: http://mu.semte.ch/graphs/public/gent
+      AI_GRAPH: http://mu.semte.ch/graphs/public/gent
       ALLOW_MU_AUTH_SUDO: true
       MOUNTED_SHARE_FOLDER: '/mnt/share'
     volumes:
@@ -395,11 +395,11 @@ services:
       FILES_GRAPH: http://mu.semte.ch/graphs/harvesting
       OPARL_TEMP_GRAPH: http://mu.semte.ch/graphs/harvesting
       OSLO_TEMP_GRAPH: http://mu.semte.ch/graphs/harvesting
-      PUBLICATION_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      EXPRESSIONS_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      WORKS_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      MANIFESTATIONS_GRAPH: http://mu.semte.ch/graphs/public/pdf
-      AI_GRAPH: http://mu.semte.ch/graphs/public/ai
+      PUBLICATION_GRAPH: http://mu.semte.ch/graphs/public/gent
+      EXPRESSIONS_GRAPH: http://mu.semte.ch/graphs/public/gent
+      WORKS_GRAPH: http://mu.semte.ch/graphs/public/gent
+      MANIFESTATIONS_GRAPH: http://mu.semte.ch/graphs/public/gent
+      AI_GRAPH: http://mu.semte.ch/graphs/public/gent
       ALLOW_MU_AUTH_SUDO: true
       # 0.2.x moved the config mount from /app to /config
       CONFIG_PATH: /config/config.json
